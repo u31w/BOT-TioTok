@@ -1,6 +1,4 @@
 pyrogram==2.0.51
 tgcrypto==1.2.2
-yt-dlp==2025.08.22      # بديل youtube_dl مع دعم أفضل
-TikTokApi==5.9.3
-instaloader==4.12
+yt-dlp==2025.08.22
 requests==2.31.0
