@@ -39,37 +39,43 @@ WELCOME_MESSAGE = """👋┇أهلاً بك Bot-saleh
 def start(client, message: Message):
     message.reply_text(WELCOME_MESSAGE)
 
-# ------------------ استقبال الروابط ------------------
-@app.on_message(filters.text & ~filters.command)
-def download_video(client, message: Message):
-    url = message.text.strip()
+# ------------------ دالة تحميل يوتيوب ------------------
+def download_youtube(url, audio_only=False):
+    filename = "video.mp4"
+    ydl_opts = {
+        'format': 'bestaudio/best' if audio_only else 'bestvideo+bestaudio/best',
+        'outtmpl': filename,
+        'noplaylist': True
+    }
+    with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+        ydl.download([url])
+    return filename
 
+# ------------------ استقبال الرسائل والروابط ------------------
+@app.on_message(filters.text & ~filters.command)
+def handle_links(client, message: Message):
+    url = message.text.strip()
     try:
-        # ------------------ YouTube ------------------
+        # --------------- YouTube ----------------
         if "youtube.com" in url or "youtu.be" in url:
             message.reply_text("🔄 جاري تحميل فيديو يوتيوب ...")
-            ydl_opts = {
-                'format': 'bestvideo+bestaudio/best',  # HD
-                'outtmpl': 'video.mp4',
-                'noplaylist': True
-            }
-            with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-                ydl.download([url])
-            message.reply_video("video.mp4")
-            os.remove("video.mp4")
+            file_path = download_youtube(url)
+            message.reply_video(file_path)
+            os.remove(file_path)
 
-        # ------------------ TikTok ------------------
+        # --------------- TikTok ----------------
         elif "tiktok.com" in url:
             message.reply_text("🔄 جاري تحميل فيديو تيك توك ...")
             with TikTokApi() as api:
                 video_bytes = api.video(url=url).bytes()
             message.reply_video(video_bytes)
 
-        # ------------------ Instagram ------------------
+        # --------------- Instagram ----------------
         elif "instagram.com" in url:
             message.reply_text("🔄 جاري تحميل فيديو انستقرام ...")
             L = instaloader.Instaloader()
-            post = instaloader.Post.from_shortcode(L.context, url.split("/")[-2])
+            shortcode = url.split("/")[-2]
+            post = instaloader.Post.from_shortcode(L.context, shortcode)
             L.download_post(post, target=".")
             video_file = [f for f in os.listdir(".") if f.endswith(".mp4")][0]
             message.reply_video(video_file)
