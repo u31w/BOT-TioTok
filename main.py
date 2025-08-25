@@ -5,18 +5,14 @@ import tempfile
 import shutil
 from pathlib import Path
 from contextlib import suppress
-
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
-
 from yt_dlp import YoutubeDL
-from yt_dlp.utils import DownloadError
 
 # ---------------- إعدادات ----------------
 API_ID = int(os.environ.get("API_ID", "0"))
 API_HASH = os.environ.get("API_HASH", "")
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
-
 TELEGRAM_MAX_MB = int(os.environ.get("TELEGRAM_MAX_MB", "1900"))
 TELEGRAM_MAX_BYTES = TELEGRAM_MAX_MB * 1024 * 1024
 
@@ -79,7 +75,6 @@ async def on_text(_, m: Message):
     if not match:
         return
     url = match.group(0)
-    # تخزين الرابط
     sent = await m.reply_text("🔎 أفحص الرابط وأجهز التحميل…")
     app.storage[str(sent.id)] = url
     await sent.edit("✅ الرابط واضح\nاختَر طريقة التحميل من تحت:", reply_markup=MENU_KB)
@@ -94,7 +89,6 @@ async def mode_clicked(_, cq: CallbackQuery):
         return
     await cq.answer()
     await cq.message.edit_text("🔄 جاري التحميل…")
-
     audio_only = mode=="audio"
     tmp_dir = Path(tempfile.mkdtemp(prefix="salehbot_"))
 
@@ -104,7 +98,6 @@ async def mode_clicked(_, cq: CallbackQuery):
             fsize = Path(file_path).stat().st_size
             if fsize > TELEGRAM_MAX_BYTES:
                 raise Exception(f"حجم الملف {human_readable_size(fsize)} أكبر من حد تيليجرام {TELEGRAM_MAX_MB}MB")
-
             caption = f"📦 التحميل جاهز!\nالحجم: {human_readable_size(fsize)}"
             if audio_only:
                 await cq.message.reply_audio(file_path, caption=caption)
